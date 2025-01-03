@@ -14,36 +14,36 @@ resource "aws_subnet" "sample-subnet" {
   }
 }
 
-# resource "aws_network_acl" "sample-network-acl" {
-#   vpc_id     = aws_vpc.sample-vpc.id
-#   subnet_ids = [aws_subnet.sample-subnet.id]
-#   ingress {
-#     protocol   = "tcp"
-#     rule_no    = 100
-#     action     = "allow"
-#     cidr_block = "0.0.0.0/0"
-#     from_port  = 22
-#     to_port    = 22
-#   }
-#
-#   ingress {
-#     protocol   = "icmp"
-#     rule_no    = 200
-#     action     = "allow"
-#     cidr_block = "0.0.0.0/0"
-#     from_port  = 0
-#     to_port    = 0
-#   }
-#
-#   egress {
-#     protocol   = "-1"
-#     rule_no    = 100
-#     action     = "allow"
-#     cidr_block = "0.0.0.0/0"
-#     from_port  = 0
-#     to_port    = 0
-#   }
-# }
+resource "aws_network_acl" "sample-network-acl" {
+  vpc_id     = aws_vpc.sample-vpc.id
+  subnet_ids = [aws_subnet.sample-subnet.id]
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 22
+    to_port    = 22
+  }
+
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 101
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 80
+    to_port    = 80
+  }
+
+  egress {
+    protocol   = "-1"
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+}
 
 resource "aws_internet_gateway" "sample-igw" {
   vpc_id = aws_vpc.sample-vpc.id
