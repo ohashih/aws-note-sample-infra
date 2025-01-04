@@ -3,8 +3,8 @@ terraform {
   backend "s3" {
     bucket         = "kurage-infrastructures"
     region         = "ap-northeast-1"
-    key            = "aws-note-vpc/terraform.tfstate"
-    dynamodb_table = "aws-note-sample-infra-vpc"
+    key            = "aws-note-vpc-with-eip/terraform.tfstate"
+    dynamodb_table = "aws-note-sample-infra-vpc-with-eip"
   }
   required_providers {
     aws = {
