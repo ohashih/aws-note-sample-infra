@@ -6,7 +6,6 @@ resource "aws_instance" "sample-instance" {
   security_groups             = [aws_security_group.sample-security-group.id]
   vpc_security_group_ids      = [aws_security_group.sample-security-group.id]
   associate_public_ip_address = true
-
   tags = {
     Name = "aws-note-vpc"
   }
