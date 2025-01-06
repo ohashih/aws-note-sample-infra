@@ -7,16 +7,16 @@ resource "aws_vpc" "sample-vpc" {
   }
 }
 
-resource "aws_subnet" "sample-subnet" {
+resource "aws_subnet" "sample-public-subnet" {
   vpc_id            = aws_vpc.sample-vpc.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "ap-northeast-1a"
   tags = {
-    Name = "aws-note"
+    Name = "aws-note-public"
   }
 }
 
-resource "aws_subnet" "sample-subnet-2" {
+resource "aws_subnet" "sample-private-subnet" {
   vpc_id            = aws_vpc.sample-vpc.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "ap-northeast-1a"
@@ -25,65 +25,11 @@ resource "aws_subnet" "sample-subnet-2" {
   }
 }
 
-resource "aws_network_acl" "sample-network-acl" {
-  vpc_id     = aws_vpc.sample-vpc.id
-  subnet_ids = [aws_subnet.sample-subnet.id]
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 22
-    to_port    = 22
-  }
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 101
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 80
-    to_port    = 80
-  }
-
-  egress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-}
-
-resource "aws_network_acl" "sample-network-acl-private" {
-  vpc_id     = aws_vpc.sample-vpc.id
-  subnet_ids = [aws_subnet.sample-subnet-2.id]
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "10.0.1.0/24"
-    from_port  = 22
-    to_port    = 22
-  }
-
-  egress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-}
-
 resource "aws_internet_gateway" "sample-igw" {
   vpc_id = aws_vpc.sample-vpc.id
 }
 
-resource "aws_route_table" "sample-route-table" {
+resource "aws_route_table" "sample-igw-route-table" {
   vpc_id = aws_vpc.sample-vpc.id
   route {
     cidr_block = "0.0.0.0/0"
@@ -91,19 +37,24 @@ resource "aws_route_table" "sample-route-table" {
   }
 }
 
-resource "aws_route_table_association" "sample-route-table-association" {
-  subnet_id      = aws_subnet.sample-subnet.id
-  route_table_id = aws_route_table.sample-route-table.id
+resource "aws_route_table_association" "sample-public-route-table-association" {
+  subnet_id      = aws_subnet.sample-public-subnet.id
+  route_table_id = aws_route_table.sample-igw-route-table.id
 }
 
-resource "aws_route_table" "sample-private-s3-route-table" {
+resource "aws_route_table" "sample-private-route-table" {
   vpc_id = aws_vpc.sample-vpc.id
 }
 
-resource "aws_vpc_endpoint" "sample-gateway-s3" {
+resource "aws_route_table_association" "sample-route-table-private-association" {
+  subnet_id      = aws_subnet.sample-private-subnet.id
+  route_table_id = aws_route_table.sample-private-route-table.id
+}
+
+resource "aws_vpc_endpoint" "sample-s3-gateway" {
   vpc_id          = aws_vpc.sample-vpc.id
   service_name    = "com.amazonaws.ap-northeast-1.s3"
-  route_table_ids = [aws_route_table.sample-private-s3-route-table.id]
+  route_table_ids = [aws_route_table.sample-private-route-table.id]
   policy          = <<POLICY
 {
   "Version": "2012-10-17",

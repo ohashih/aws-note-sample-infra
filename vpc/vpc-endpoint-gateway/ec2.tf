@@ -1,80 +1,79 @@
-resource "aws_instance" "sample-instance" {
+resource "aws_instance" "sample-public-instance" {
   ami                         = data.aws_ami.al2023.id
   key_name                    = "kurage"
   instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.sample-subnet.id
-  security_groups             = [aws_security_group.sample-security-group.id]
+  subnet_id                   = aws_subnet.sample-public-subnet.id
+  security_groups             = [aws_security_group.sample-public-security-group.id]
   associate_public_ip_address = true
   tags = {
-    Name = "aws-note-vpc"
+    Name = "aws-note-vpc-public"
   }
 }
 
-resource "aws_instance" "sample-instance2" {
+resource "aws_instance" "sample-pirvate-instance" {
   ami             = data.aws_ami.al2023.id
   key_name        = "kurage"
   instance_type   = "t2.micro"
-  subnet_id       = aws_subnet.sample-subnet-2.id
-  security_groups = [aws_security_group.sample-security-group-private.id]
+  subnet_id       = aws_subnet.sample-private-subnet.id
+  security_groups = [aws_security_group.sample-private-security-group.id]
+  private_ip      = "10.0.2.10"
   tags = {
-    Name = "aws-note-vpc"
+    Name = "aws-note-vpc-private"
   }
 }
 
-resource "aws_security_group" "sample-security-group-private" {
-  name        = "allow ssh private"
-  description = "allow ssh private"
+resource "aws_security_group" "sample-public-security-group" {
+  name        = "public"
+  description = "allow ssh and http"
   vpc_id      = aws_vpc.sample-vpc.id
+  ingress {
+    description = "Allow HTTP"
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+  }
+
+  ingress {
+    description = "Allow SSH"
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 22
+    to_port     = 22
+  }
+  egress {
+    description = "Allow all outbound traffic"
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+  }
 }
 
-resource "aws_vpc_security_group_ingress_rule" "sample-private-ingress" {
-  security_group_id = aws_security_group.sample-security-group-private.id
-  referenced_security_group_id = aws_security_group.sample-security-group.id
-  from_port         = 22
-  ip_protocol       = "tcp"
-  to_port           = "22"
-}
-
-resource "aws_vpc_security_group_egress_rule" "sample-private-egress" {
-  security_group_id = aws_security_group.sample-security-group-private.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 22
-  ip_protocol       = "tcp"
-  to_port           = 22
-}
-
-resource "aws_security_group" "sample-security-group" {
-  name        = "allow_ssh"
-  description = "allow ssh"
+resource "aws_security_group" "sample-private-security-group" {
+  name        = "private"
+  description = "allow http and Limited SSH"
   vpc_id      = aws_vpc.sample-vpc.id
-}
+  ingress {
+    description = "Allow HTTP"
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 80
+  }
 
-resource "aws_vpc_security_group_ingress_rule" "sample-ingress" {
-  security_group_id = aws_security_group.sample-security-group.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 22
-  ip_protocol       = "tcp"
-  to_port           = 22
-}
-
-resource "aws_vpc_security_group_ingress_rule" "sample-ingress-http" {
-  security_group_id = aws_security_group.sample-security-group.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = 80
-  ip_protocol       = "tcp"
-  to_port           = 80
-}
-
-resource "aws_vpc_security_group_ingress_rule" "sample-ingress-icmp" {
-  security_group_id = aws_security_group.sample-security-group.id
-  cidr_ipv4         = "0.0.0.0/0"
-  from_port         = -1
-  ip_protocol       = "icmp"
-  to_port           = -1
-}
-
-resource "aws_vpc_security_group_egress_rule" "sample-egress" {
-  security_group_id = aws_security_group.sample-security-group.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
+  ingress {
+    description     = "Allow SSH"
+    security_groups = [aws_security_group.sample-public-security-group.id]
+    protocol        = "tcp"
+    from_port       = 22
+    to_port         = 22
+  }
+  egress {
+    description = "Allow all outbound traffic"
+    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+  }
 }
